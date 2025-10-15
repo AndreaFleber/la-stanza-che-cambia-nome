@@ -1,130 +1,233 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>La stanza che cambia nome</title>
-  <style>
-    body {
-      background-color: #0e0e0e;
-      color: #e0e0e0;
-      font-family: 'Helvetica', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      text-align: center;
-    }
-    #fragment {
-      font-size: 1.5em;
-      max-width: 700px;
-      margin: 20px;
-      min-height: 4em;
-      transition: opacity 0.6s ease;
-    }
-    button {
-      margin: 5px;
-      padding: 8px 18px;
-      background: transparent;
-      color: #e0e0e0;
-      border: 1px solid #e0e0e0;
-      cursor: pointer;
-      font-size: 1em;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-    }
-    button:hover {
-      background: #e0e0e0;
-      color: #0e0e0e;
-    }
-    #info {
-      font-size: 0.9em;
-      color: #aaa;
-      margin-top: 20px;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>La stanza che cambia nome — Romanzi Effimeri</title>
+<style>
+  :root{--bg:#0b0b0d;--text:#e9eef6;--muted:#9aa3ad;--accent:#cfe0ff}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#070708);font-family:Helvetica,Arial,sans-serif;color:var(--text)}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
+  .card{width:880px;max-width:96%;background:rgba(255,255,255,0.02);border-radius:12px;padding:28px;box-shadow:0 12px 34px rgba(0,0,0,0.6);text-align:center}
+  .title{font-size:20px;color:var(--accent);margin:0 0 6px;font-weight:600}
+  .subtitle{font-size:13px;color:var(--muted);margin:0 0 18px}
+  #fragment{min-height:120px;font-size:20px;line-height:1.6;opacity:0;transform:translateY(6px);transition:opacity .6s, transform .6s}
+  .visible{opacity:1;transform:translateY(0)}
+  .controls{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:18px}
+  button{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:10px 14px;border-radius:8px;cursor:pointer}
+  button.primary{background:#fff;color:#070708;border:none}
+  .meta{color:var(--muted);font-size:13px;margin-top:12px}
+  .progress{height:6px;background:rgba(255,255,255,0.03);border-radius:6px;margin-top:14px;overflow:hidden}
+  .bar{height:100%;width:0%;background:linear-gradient(90deg,#7ea2ff,#a3d0ff)}
+  .manifesto{opacity:0;transition:opacity 3s ease;margin-top:26px;color:#9aa3ad;font-size:13px;line-height:1.5}
+  .manifesto.visible{opacity:1}
+  @media (max-width:520px){.card{padding:18px}.title{font-size:18px}#fragment{font-size:17px}}
+</style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card" role="main" aria-live="polite">
+      <div class="title">La stanza che cambia nome</div>
+      <div class="subtitle">Opera: Romanzi Effimeri — ogni lettura ricompone un mistero nuovo</div>
 
-  <div id="fragment">Caricamento della stanza...</div>
-  <div>
-    <button onclick="prevFragment()">Indietro</button>
-    <button onclick="pausePlay()">Pausa</button>
-    <button onclick="nextFragment()">Avanti</button>
-    <button onclick="restart()">Ricomincia</button>
+      <div id="fragment" aria-atomic="true">Preparazione…</div>
+
+      <div class="controls">
+        <button id="playPause">Pausa</button>
+        <button id="next">Avanti</button>
+        <button id="restart">Ricomincia</button>
+        <div style="flex:1"></div>
+        <div style="color:var(--muted); font-size:13px">Sessione casuale — ordine nuovo ad ogni caricamento</div>
+      </div>
+
+      <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+      <div class="meta" id="meta">Frasi totali: 40 — riproduzione automatica ogni 3.5s</div>
+      <div class="manifesto" id="manifesto">
+        <p><em>Manifesto dei Romanzi Effimeri</em></p>
+        <p>Queste opere si riscrivono ad ogni lettura. Non cercano la memoria: cercano l'attimo.</p>
+      </div>
+    </div>
   </div>
-  <div id="info"></div>
 
-  <script>
-    const fragmentsBase = [
-      "La stanza è vuota, ma qualcuno ha appena respirato.",
-      "Ogni volta che apri la porta, qualcosa è diverso.",
-      "Sul tavolo c’è una chiave che non ricordi di avere lasciato.",
-      "Una voce sussurra il tuo nome, ma non sai da dove arriva.",
-      "La finestra riflette un volto che non è il tuo.",
-      "Nel corridoio senti passi, ma nessuno è lì.",
-      "Ogni accesso cambia la storia, ma la storia cambia anche te."
-    ];
+<script>
+// --- 40 FRAMMENTI (thriller onirico) ---
+const FRAGMENTS = [
+  { id:"f1", text: "Quando aprì gli occhi, la stanza non aveva finestre, ma ricordava di averne avute." },
+  { id:"f2", text: "Sul pavimento c’era una chiave che non apriva nulla, ma che qualcuno aveva già usato." },
+  { id:"f3", text: "Ogni volta che pronunciava il suo nome, l’eco gli rispondeva con un altro." },
+  { id:"f4", text: "Un orologio senza lancette ticchettava comunque, come se avesse nostalgia del tempo." },
+  { id:"f5", text: "La porta c’era, ma cambiava muro ogni volta che si voltava." },
+  { id:"f6", text: "Una voce dietro di lui ripeteva le sue frasi con un secondo di ritardo." },
+  { id:"f7", text: "Sul tavolo trovò una fotografia in cui il suo volto era leggermente sfocato." },
+  { id:"f8", text: "C’era scritto: “Questa è la prova che sei stato qui.”" },
+  { id:"f9", text: "Provò ad aprire la finestra che non esisteva e sentì un vento freddo entrare comunque." },
+  { id:"f10", text: "Ogni oggetto nella stanza sembrava ricordare qualcosa che lui aveva dimenticato." },
+  { id:"f11", text: "Sapeva di essere venuto per indagare, ma non ricordava su cosa." },
+  { id:"f12", text: "Nella tasca trovò un taccuino: le prime pagine erano scritte da lui, le ultime da qualcun altro." },
+  { id:"f13", text: "Ogni parola cancellata sul taccuino appariva sul muro, in ordine diverso." },
+  { id:"f14", text: "“Non fidarti della porta,” diceva una frase scritta in rosso, “ti riporta solo al punto di partenza.”" },
+  { id:"f15", text: "Sospettava che il delitto non fosse mai avvenuto, ma che tutti ricordassero comunque un colpevole." },
+  { id:"f16", text: "Sentiva odore di pioggia, ma non c’era nessuna finestra aperta." },
+  { id:"f17", text: "Il telefono squillò. Dall’altra parte, la sua stessa voce gli disse: “Hai già chiamato.”" },
+  { id:"f18", text: "Trovò una scarpa sporca di terra e capì di non aver mai camminato lì." },
+  { id:"f19", text: "C’era un bicchiere mezzo pieno d’acqua, ma il riflesso mostrava una stanza diversa." },
+  { id:"f20", text: "Scrisse sul muro una frase: “Il corpo non era mai stato trovato.”" },
+  { id:"f21", text: "Poi la frase sparì e il muro gli restituì una parola soltanto: “Ancora.”" },
+  { id:"f22", text: "Provò a spegnere la luce, ma la stanza diventò più chiara." },
+  { id:"f23", text: "Ogni volta che chiudeva gli occhi, ricordava un dettaglio nuovo del delitto." },
+  { id:"f24", text: "Non sapeva se era un investigatore o il sospettato." },
+  { id:"f25", text: "In un sogno dentro il sogno, vide il cadavere aprire gli occhi." },
+  { id:"f26", text: "Si risvegliò nello stesso punto, ma con il taccuino pieno di nuove frasi." },
+  { id:"f27", text: "Ogni frase iniziava con: “Io non volevo dimenticare.”" },
+  { id:"f28", text: "Dalla porta entrò qualcuno con il suo stesso viso." },
+  { id:"f29", text: "“Non sei tu,” disse l’altro, “sei l’ultima versione di me.”" },
+  { id:"f30", text: "L’altro sorrise e gli lasciò la chiave. “Prova ad aprire, ma ricordati di chiudere dietro di te.”" },
+  { id:"f31", text: "Quando girò la chiave, la stanza ruotò lentamente, come se si stesse ricordando." },
+  { id:"f32", text: "Ogni oggetto tornò al posto giusto, ma il tavolo era sparito." },
+  { id:"f33", text: "Il telefono squillò ancora: “Abbiamo trovato il corpo. Era tuo.”" },
+  { id:"f34", text: "Il muro si incrinò e dietro comparve la fotografia di una stanza identica." },
+  { id:"f35", text: "Guardando meglio, vide che nella foto c’era lui, mentre guardava la foto." },
+  { id:"f36", text: "Pensò che forse l’indagine era iniziata quando aveva aperto il libro." },
+  { id:"f37", text: "Il libro era questo." },
+  { id:"f38", text: "“Non rileggere,” diceva l’ultima pagina, “oppure cambierà tutto ancora.”" },
+  { id:"f39", text: "Sentì bussare. Da dentro." },
+  { id:"f40", text: "Poi la stanza smise di avere un nome." }
+];
 
-    let fragments = [];
-    let current = 0;
-    let interval = null;
-    let paused = false;
+// piccoli ending
+const ENDINGS = [
+  "Alla fine rimase solo un biglietto con una domanda: chi ha scritto la stanza?",
+  "La stanza si richiuse e il suo nome tornò a essere un silenzio.",
+  "Qualcuno spense la luce e sentì la vecchia promessa di non ricordare più.",
+  "Quando cercò la risposta, si accorse che la verità era soltanto una ricostruzione.",
+  "Il libro chiuse le pagine e la stanza cominciò a respirare come se fosse viva.",
+  "Guardò la fotografia un’ultima volta e capì che anche il ricordo può mentire."
+];
 
-    function shuffle(array) {
-      let a = [...array];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
+// utilità: mescola Fisher-Yates
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-    function showFragment() {
-      const el = document.getElementById("fragment");
-      el.style.opacity = 0;
-      setTimeout(() => {
-        el.textContent = fragments[current];
-        el.style.opacity = 1;
-      }, 300);
-    }
+// UI
+const fragmentEl = document.getElementById('fragment');
+const playPauseBtn = document.getElementById('playPause');
+const nextBtn = document.getElementById('next');
+const restartBtn = document.getElementById('restart');
+const barEl = document.getElementById('bar');
+const metaEl = document.getElementById('meta');
 
-    function nextFragment() {
-      current = (current + 1) % fragments.length;
-      showFragment();
-    }
+let playlist = [];
+let current = 0;
+let playing = true;
+let intervalMs = 3500;
+let timer = null;
 
-    function prevFragment() {
-      current = (current - 1 + fragments.length) % fragments.length;
-      showFragment();
-    }
+function setupAndPlay(){
+  // copia e mescola i frammenti
+  playlist = shuffle(FRAGMENTS.slice());
+  current = 0;
+  metaEl.textContent = `Frasi totali: ${playlist.length} — riproduzione automatica ogni ${intervalMs/1000}s`;
+  showStep(current);
+  startTimer();
+  updateBar();
+}
 
-    function setupAndPlay() {
-      fragments = shuffle(fragmentsBase);
-      current = 0;
-      showFragment();
-      interval = setInterval(() => {
-        if (!paused) nextFragment();
-      }, 4000);
+function showStep(i){
+  if(!playlist || playlist.length===0){
+    fragmentEl.textContent = "Nessun frammento disponibile.";
+    fragmentEl.classList.add('visible');
+    return;
+  }
+  fragmentEl.classList.remove('visible');
+  setTimeout(()=>{
+    fragmentEl.textContent = playlist[i].text;
+    fragmentEl.classList.add('visible');
+    updateBar();
+  }, 120);
+}
 
-      document.getElementById("info").innerText =
-        `Sessione casuale n°${Math.floor(Math.random() * 10000)} — Frasi totali: ${fragments.length}`;
-    }
+function nextStep(){
+  if(!playlist || playlist.length===0) return;
+  current++;
+  if(current >= playlist.length){
+    showEnding();
+    stopTimer();
+    return;
+  }
+  showStep(current);
+}
 
-    function pausePlay() {
-      paused = !paused;
-      document.querySelector('button:nth-child(2)').innerText = paused ? "Riprendi" : "Pausa";
-    }
+function prevStep(){
+  if(!playlist || playlist.length===0) return;
+  current = (current-1+playlist.length)%playlist.length;
+  showStep(current);
+}
 
-    function restart() {
-      clearInterval(interval);
-      setupAndPlay();
-    }
+function showEnding(){
+  fragmentEl.classList.remove('visible');
+  setTimeout(()=>{
+    const lastId = playlist[playlist.length-1].id || "";
+    let num = 0;
+    const m = lastId.match(/\d+/);
+    if(m) num = parseInt(m[0],10);
+    const endingIndex = num % ENDINGS.length;
+    fragmentEl.textContent = ENDINGS[endingIndex];
+    fragmentEl.classList.add('visible');
+    metaEl.textContent = `Fine. Sequenza terminata (${playlist.length} frammenti).`;
+    barEl.style.width = `100%`;
+    // mostra manifesto dopo 3.5s
+    setTimeout(()=> document.getElementById('manifesto').classList.add('visible'), 3500);
+  }, 120);
+}
 
-    setupAndPlay();
-  </script>
+function startTimer(){
+  stopTimer();
+  if(!playing) return;
+  timer = setInterval(()=> nextStep(), intervalMs);
+  playPauseBtn.textContent = 'Pausa';
+}
 
+function stopTimer(){
+  if(timer){ clearInterval(timer); timer = null; }
+  playPauseBtn.textContent = 'Riprendi';
+}
+
+function togglePlay(){
+  playing = !playing;
+  if(playing) startTimer(); else stopTimer();
+}
+
+function updateBar(){
+  if(!playlist || playlist.length===0){ barEl.style.width='0%'; return; }
+  const pct = Math.round((current / playlist.length) * 100);
+  barEl.style.width = `${pct}%`;
+}
+
+// eventi UI
+playPauseBtn.addEventListener('click', ()=> togglePlay());
+nextBtn.addEventListener('click', ()=>{
+  if(current >= playlist.length){ setupAndPlay(); return; }
+  if(playing){ stopTimer(); playing = false; }
+  nextStep();
+});
+restartBtn.addEventListener('click', ()=> { setupAndPlay(); });
+
+// tastiera: spazio = avanti, freccia sin/dx per indietro/avanti
+document.addEventListener('keydown', (e)=>{
+  if(e.code==='Space'){ e.preventDefault(); nextBtn.click(); }
+  if(e.code==='ArrowLeft'){ prevStep(); }
+  if(e.code==='ArrowRight'){ nextBtn.click(); }
+});
+
+// init
+document.addEventListener('DOMContentLoaded', ()=> {
+  setTimeout(()=> setupAndPlay(), 120);
+});
+</script>
 </body>
 </html>
