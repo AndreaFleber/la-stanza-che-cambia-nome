@@ -1,249 +1,83 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>La stanza che cambia nome — Il romanzo che ti dimentica</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La stanza che cambia nome</title>
 <style>
-  :root{
-    --bg:#0f0f10;
-    --card:#0f1115;
-    --text:#e9eef6;
-    --muted:#9aa3ad;
-    --accent:#dfe7ff;
+  body {
+    background-color: #0b0b0b;
+    color: #f5f5f5;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
   }
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#0b0b0c);font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial;}
-  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:36px;}
-  .card{width:860px;max-width:94%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:34px;box-shadow:0 12px 40px rgba(0,0,0,0.6);color:var(--text);}
-  .title{font-size:20px;letter-spacing:0.06em;margin:0 0 6px 0;color:var(--accent);font-weight:600}
-  .subtitle{margin:0 0 18px 0;color:var(--muted);font-size:13px}
-  #fragment{min-height:120px;font-size:20px;line-height:1.55;opacity:0;transition:opacity .6s ease, transform .6s ease; transform: translateY(6px);}
-  .visible{opacity:1; transform: translateY(0);}
-  .controls{display:flex;gap:10px;align-items:center;margin-top:18px}
-  button{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px}
-  button.primary{background:#fff;color:#0b0b0c;border:none;font-weight:600}
-  button.ghost{border:1px dashed rgba(255,255,255,0.04)}
-  .meta{color:var(--muted);font-size:13px;margin-top:12px}
-  .progress{height:6px;background:rgba(255,255,255,0.03);border-radius:6px;margin-top:14px;overflow:hidden}
-  .bar{height:100%;width:0%;background:linear-gradient(90deg,#7ea2ff,#a3d0ff)}
-  .footer{margin-top:12px;color:var(--muted);font-size:12px}
-  @media (max-width:520px){
-    .card{padding:20px}
-    #fragment{font-size:17px}
+
+  #title {
+    font-size: 1.5em;
+    color: #aaa;
+    margin-bottom: 20px;
+    opacity: 0.8;
+  }
+
+  #fragment {
+    font-size: 1.3em;
+    max-width: 600px;
+    margin: 20px;
+    opacity: 1;
+    transition: opacity 1s ease;
+  }
+
+  #controls {
+    margin-top: 30px;
+  }
+
+  button {
+    background: transparent;
+    border: 2px solid #f5f5f5;
+    color: #f5f5f5;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 1em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    background: #f5f5f5;
+    color: #0b0b0b;
+  }
+
+  footer {
+    position: absolute;
+    bottom: 10px;
+    font-size: 0.8em;
+    color: #777;
   }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="main" aria-live="polite">
-      <div class="title">La stanza che cambia nome</div>
-      <div class="subtitle">Ogni lettura ricompone un mistero nuovo — passa il tempo e il testo dimentica.</div>
 
-      <div id="fragment" aria-atomic="true">Preparazione…</div>
+<div id="title">La stanza che cambia nome</div>
+<div id="fragment">Caricamento in corso...</div>
 
-      <div class="controls">
-        <button id="playPause" title="Pausa / Riprendi">Pausa</button>
-        <button id="next">Avanti</button>
-        <button id="restart" class="ghost">Ricomincia</button>
-        <div style="flex:1"></div>
-        <div style="color:var(--muted); font-size:13px">Sessione casuale — ordine nuovo ad ogni caricamento</div>
-      </div>
+<div id="controls">
+  <button id="nextButton">Avanti</button>
+  <button id="pauseButton">Pausa</button>
+  <button id="restartButton">Ricomincia</button>
+</div>
 
-      <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
-      <div class="meta" id="meta">Frasi totali: 40 — riproduzione automatica ogni 3.5s</div>
-      <div class="footer">Progetto: Il romanzo che ti dimentica — versione: La stanza che cambia nome</div>
-    </div>
-  </div>
+<footer>
+  Sessione casuale · Frasi totali: 7 · Progetto “Romanzi Effimeri”
+</footer>
 
 <script>
-// --- FRAMMENTI (40) ---
-const FRAGMENTS = [
-  { id:"f1", text: "Quando aprì gli occhi, la stanza non aveva finestre, ma ricordava di averne avute." },
-  { id:"f2", text: "Sul pavimento c’era una chiave che non apriva nulla, ma che qualcuno aveva già usato." },
-  { id:"f3", text: "Ogni volta che pronunciava il suo nome, l’eco gli rispondeva con un altro." },
-  { id:"f4", text: "Un orologio senza lancette ticchettava comunque, come se avesse nostalgia del tempo." },
-  { id:"f5", text: "La porta c’era, ma cambiava muro ogni volta che si voltava." },
-  { id:"f6", text: "Una voce dietro di lui ripeteva le sue frasi con un secondo di ritardo." },
-  { id:"f7", text: "Sul tavolo trovò una fotografia in cui il suo volto era leggermente sfocato." },
-  { id:"f8", text: "C’era scritto: “Questa è la prova che sei stato qui.”" },
-  { id:"f9", text: "Provò ad aprire la finestra che non esisteva e sentì un vento freddo entrare comunque." },
-  { id:"f10", text: "Ogni oggetto nella stanza sembrava ricordare qualcosa che lui aveva dimenticato." },
-  { id:"f11", text: "Sapeva di essere venuto per indagare, ma non ricordava su cosa." },
-  { id:"f12", text: "Nella tasca trovò un taccuino: le prime pagine erano scritte da lui, le ultime da qualcun altro." },
-  { id:"f13", text: "Ogni parola cancellata sul taccuino appariva sul muro, in ordine diverso." },
-  { id:"f14", text: "“Non fidarti della porta,” diceva una frase scritta in rosso, “ti riporta solo al punto di partenza.”" },
-  { id:"f15", text: "Sospettava che il delitto non fosse mai avvenuto, ma che tutti ricordassero comunque un colpevole." },
-  { id:"f16", text: "Sentiva odore di pioggia, ma non c’era nessuna finestra aperta." },
-  { id:"f17", text: "Il telefono squillò. Dall’altra parte, la sua stessa voce gli disse: “Hai già chiamato.”" },
-  { id:"f18", text: "Trovò una scarpa sporca di terra e capì di non aver mai camminato lì." },
-  { id:"f19", text: "C’era un bicchiere mezzo pieno d’acqua, ma il riflesso mostrava una stanza diversa." },
-  { id:"f20", text: "Scrisse sul muro una frase: “Il corpo non era mai stato trovato.”" },
-  { id:"f21", text: "Poi la frase sparì e il muro gli restituì una parola soltanto: “Ancora.”" },
-  { id:"f22", text: "Provò a spegnere la luce, ma la stanza diventò più chiara." },
-  { id:"f23", text: "Ogni volta che chiudeva gli occhi, ricordava un dettaglio nuovo del delitto." },
-  { id:"f24", text: "Non sapeva se era un investigatore o il sospettato." },
-  { id:"f25", text: "In un sogno dentro il sogno, vide il cadavere aprire gli occhi." },
-  { id:"f26", text: "Si risvegliò nello stesso punto, ma con il taccuino pieno di nuove frasi." },
-  { id:"f27", text: "Ogni frase iniziava con: “Io non volevo dimenticare.”" },
-  { id:"f28", text: "Dalla porta entrò qualcuno con il suo stesso viso." },
-  { id:"f29", text: "“Non sei tu,” disse l’altro, “sei l’ultima versione di me.”" },
-  { id:"f30", text: "L’altro sorrise e gli lasciò la chiave. “Prova ad aprire, ma ricordati di chiudere dietro di te.”" },
-  { id:"f31", text: "Quando girò la chiave, la stanza ruotò lentamente, come se si stesse ricordando." },
-  { id:"f32", text: "Ogni oggetto tornò al posto giusto, ma il tavolo era sparito." },
-  { id:"f33", text: "Il telefono squillò ancora: “Abbiamo trovato il corpo. Era tuo.”" },
-  { id:"f34", text: "Il muro si incrinò e dietro comparve la fotografia di una stanza identica." },
-  { id:"f35", text: "Guardando meglio, vide che nella foto c’era lui, mentre guardava la foto." },
-  { id:"f36", text: "Pensò che forse l’indagine era iniziata quando aveva aperto il libro." },
-  { id:"f37", text: "Il libro era questo." },
-  { id:"f38", text: "“Non rileggere,” diceva l’ultima pagina, “oppure cambierà tutto ancora.”" },
-  { id:"f39", text: "Sentì bussare. Da dentro." },
-  { id:"f40", text: "Poi la stanza smise di avere un nome." }
-];
-
-// Finali variabili (la scelta dipende dall'ultimo frammento mostrato)
-const ENDINGS = [
-  "Alla fine rimase solo un biglietto con una domanda: chi ha scritto la stanza?",
-  "La stanza si richiuse e il suo nome tornò a essere un silenzio.",
-  "Qualcuno spense la luce e sentì la vecchia promessa di non ricordare più.",
-  "Quando cercò la risposta, si accorse che la verità era soltanto una ricostruzione.",
-  "Il libro chiuse le pagine e la stanza cominciò a respirare come se fosse viva.",
-  "Guardò la fotografia un’ultima volta e capì che anche il ricordo può mentire."
-];
-
-// ---- utilità: mescola Fisher-Yates
-function shuffleArray(a){
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-// elementi UI
-const fragmentEl = document.getElementById('fragment');
-const playPauseBtn = document.getElementById('playPause');
-const nextBtn = document.getElementById('next');
-const restartBtn = document.getElementById('restart');
-const barEl = document.getElementById('bar');
-const metaEl = document.getElementById('meta');
-
-let playlist = [];        // sequenza casuale di frammenti (array di oggetti)
-let currentStep = 0;
-let playing = true;
-let intervalMs = 3500;
-let timer = null;
-
-// genera una nuova sequenza e avvia
-function setupAndPlay(){
-  // copia e mescola
-  playlist = shuffleArray(FRAGMENTS.slice());
-  currentStep = 0;
-  metaEl.textContent = `Frasi totali: ${playlist.length} — riproduzione automatica ogni ${intervalMs/1000}s`;
-  // mostra subito la prima
-  showStep(currentStep);
-  // avvia il timer autoplay
-  startTimer();
-  updateBar();
-}
-
-// mostra il frammento index
-function showStep(index){
-  if(!playlist || playlist.length===0){
-    fragmentEl.textContent = "Nessun frammento disponibile.";
-    fragmentEl.classList.add('visible');
-    return;
-  }
-  const obj = playlist[index];
-  fragmentEl.classList.remove('visible');
-  // breve attesa per transizione
-  setTimeout(()=>{
-    fragmentEl.textContent = obj.text;
-    fragmentEl.classList.add('visible');
-    updateBar();
-  }, 120);
-}
-
-// passa al passo successivo (interno)
-function nextStep(){
-  if(!playlist || playlist.length===0) return;
-  currentStep++;
-  if(currentStep >= playlist.length){
-    // siamo alla fine: mostra finale in base all'ultimo frammento
-    showEnding();
-    stopTimer();
-    return;
-  }
-  showStep(currentStep);
-}
-
-// mostra finale - scegli un ending in funzione dell'id dell'ultimo frammento
-function showEnding(){
-  fragmentEl.classList.remove('visible');
-  setTimeout(()=>{
-    // determina indice basato sull'ultimo id (estract number da "f23")
-    const lastId = playlist[playlist.length-1].id || "";
-    let num = 0;
-    const m = lastId.match(/\d+/);
-    if(m) num = parseInt(m[0],10);
-    const endingIndex = num % ENDINGS.length;
-    fragmentEl.textContent = ENDINGS[endingIndex];
-    fragmentEl.classList.add('visible');
-    metaEl.textContent = `Fine. Sequenza terminata (${playlist.length} frammenti).`;
-    barEl.style.width = `100%`;
-  }, 120);
-}
-
-// timer control
-function startTimer(){
-  stopTimer();
-  if(!playing) return;
-  timer = setInterval(()=>{
-    nextStep();
-  }, intervalMs);
-  playPauseBtn.textContent = 'Pausa';
-}
-function stopTimer(){
-  if(timer) { clearInterval(timer); timer = null; }
-  playPauseBtn.textContent = 'Riprendi';
-}
-function togglePlay(){
-  playing = !playing;
-  if(playing) startTimer(); else stopTimer();
-}
-
-// barra di progresso in funzione del passo
-function updateBar(){
-  if(!playlist || playlist.length===0){ barEl.style.width = `0%`; return; }
-  const pct = Math.min(100, Math.round((currentStep / playlist.length) * 100));
-  barEl.style.width = `${pct}%`;
-}
-
-// Eventi UI
-playPauseBtn.addEventListener('click', ()=>{
-  togglePlay();
-});
-nextBtn.addEventListener('click', ()=>{
-  // se siamo a fine, restart
-  if(currentStep >= playlist.length){ setupAndPlay(); return; }
-  // avanzamento manuale: stoppa timer temporaneamente e avanza
-  if(playing) { stopTimer(); playing = false; }
-  nextStep();
-});
-restartBtn.addEventListener('click', ()=>{
-  setupAndPlay();
-});
-
-// keyboard: spazio = avanti
-document.addEventListener('keydown', (e)=>{
-  if(e.code === 'Space'){ e.preventDefault(); nextBtn.click(); }
-});
-
-// Inizializza
-document.addEventListener('DOMContentLoaded', ()=>{
-  // small delay to allow CSS render
-  setTimeout(()=> setupAndPlay(), 120);
-});
-  <script>
 const fragments = [
   "La stanza è vuota, ma qualcuno ha appena respirato.",
   "Ogni volta che apri la porta, qualcosa è diverso.",
@@ -255,21 +89,41 @@ const fragments = [
 ];
 
 let current = 0;
-let interval;
+let interval = null;
+let paused = false;
+
+const fragmentEl = document.getElementById("fragment");
+const nextBtn = document.getElementById("nextButton");
+const pauseBtn = document.getElementById("pauseButton");
+const restartBtn = document.getElementById("restartButton");
 
 function showFragment() {
-  const el = document.getElementById("fragment");
-  el.innerText = fragments[current];
+  fragmentEl.style.opacity = 0;
+  setTimeout(() => {
+    fragmentEl.innerText = fragments[current];
+    fragmentEl.style.opacity = 1;
+  }, 500);
   current = (current + 1) % fragments.length;
 }
 
 function setupAndPlay() {
   clearInterval(interval);
+  current = Math.floor(Math.random() * fragments.length);
   showFragment();
-  interval = setInterval(showFragment, 4000);
+  interval = setInterval(() => {
+    if (!paused) showFragment();
+  }, 4000);
 }
+
+nextBtn.addEventListener("click", showFragment);
+pauseBtn.addEventListener("click", () => {
+  paused = !paused;
+  pauseBtn.innerText = paused ? "Riprendi" : "Pausa";
+});
+restartBtn.addEventListener("click", setupAndPlay);
 
 setupAndPlay();
 </script>
+
 </body>
 </html>
