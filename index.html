@@ -1,129 +1,130 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La stanza che cambia nome</title>
-<style>
-  body {
-    background-color: #0b0b0b;
-    color: #f5f5f5;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    text-align: center;
-  }
-
-  #title {
-    font-size: 1.5em;
-    color: #aaa;
-    margin-bottom: 20px;
-    opacity: 0.8;
-  }
-
-  #fragment {
-    font-size: 1.3em;
-    max-width: 600px;
-    margin: 20px;
-    opacity: 1;
-    transition: opacity 1s ease;
-  }
-
-  #controls {
-    margin-top: 30px;
-  }
-
-  button {
-    background: transparent;
-    border: 2px solid #f5f5f5;
-    color: #f5f5f5;
-    padding: 10px 20px;
-    margin: 5px;
-    font-size: 1em;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  button:hover {
-    background: #f5f5f5;
-    color: #0b0b0b;
-  }
-
-  footer {
-    position: absolute;
-    bottom: 10px;
-    font-size: 0.8em;
-    color: #777;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La stanza che cambia nome</title>
+  <style>
+    body {
+      background-color: #0e0e0e;
+      color: #e0e0e0;
+      font-family: 'Helvetica', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    #fragment {
+      font-size: 1.5em;
+      max-width: 700px;
+      margin: 20px;
+      min-height: 4em;
+      transition: opacity 0.6s ease;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 18px;
+      background: transparent;
+      color: #e0e0e0;
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+      font-size: 1em;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: #e0e0e0;
+      color: #0e0e0e;
+    }
+    #info {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
 
-<div id="title">La stanza che cambia nome</div>
-<div id="fragment">Caricamento in corso...</div>
+  <div id="fragment">Caricamento della stanza...</div>
+  <div>
+    <button onclick="prevFragment()">Indietro</button>
+    <button onclick="pausePlay()">Pausa</button>
+    <button onclick="nextFragment()">Avanti</button>
+    <button onclick="restart()">Ricomincia</button>
+  </div>
+  <div id="info"></div>
 
-<div id="controls">
-  <button id="nextButton">Avanti</button>
-  <button id="pauseButton">Pausa</button>
-  <button id="restartButton">Ricomincia</button>
-</div>
+  <script>
+    const fragmentsBase = [
+      "La stanza è vuota, ma qualcuno ha appena respirato.",
+      "Ogni volta che apri la porta, qualcosa è diverso.",
+      "Sul tavolo c’è una chiave che non ricordi di avere lasciato.",
+      "Una voce sussurra il tuo nome, ma non sai da dove arriva.",
+      "La finestra riflette un volto che non è il tuo.",
+      "Nel corridoio senti passi, ma nessuno è lì.",
+      "Ogni accesso cambia la storia, ma la storia cambia anche te."
+    ];
 
-<footer>
-  Sessione casuale · Frasi totali: 7 · Progetto “Romanzi Effimeri”
-</footer>
+    let fragments = [];
+    let current = 0;
+    let interval = null;
+    let paused = false;
 
-<script>
-const fragments = [
-  "La stanza è vuota, ma qualcuno ha appena respirato.",
-  "Ogni volta che apri la porta, qualcosa è diverso.",
-  "Sul tavolo c’è una chiave che non ricordi di avere lasciato.",
-  "Una voce sussurra il tuo nome, ma non sai da dove arriva.",
-  "La finestra riflette un volto che non è il tuo.",
-  "Nel corridoio senti passi, ma nessuno è lì.",
-  "Ogni accesso cambia la storia, ma la storia cambia anche te."
-];
+    function shuffle(array) {
+      let a = [...array];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
 
-let current = 0;
-let interval = null;
-let paused = false;
+    function showFragment() {
+      const el = document.getElementById("fragment");
+      el.style.opacity = 0;
+      setTimeout(() => {
+        el.textContent = fragments[current];
+        el.style.opacity = 1;
+      }, 300);
+    }
 
-const fragmentEl = document.getElementById("fragment");
-const nextBtn = document.getElementById("nextButton");
-const pauseBtn = document.getElementById("pauseButton");
-const restartBtn = document.getElementById("restartButton");
+    function nextFragment() {
+      current = (current + 1) % fragments.length;
+      showFragment();
+    }
 
-function showFragment() {
-  fragmentEl.style.opacity = 0;
-  setTimeout(() => {
-    fragmentEl.innerText = fragments[current];
-    fragmentEl.style.opacity = 1;
-  }, 500);
-  current = (current + 1) % fragments.length;
-}
+    function prevFragment() {
+      current = (current - 1 + fragments.length) % fragments.length;
+      showFragment();
+    }
 
-function setupAndPlay() {
-  clearInterval(interval);
-  current = Math.floor(Math.random() * fragments.length);
-  showFragment();
-  interval = setInterval(() => {
-    if (!paused) showFragment();
-  }, 4000);
-}
+    function setupAndPlay() {
+      fragments = shuffle(fragmentsBase);
+      current = 0;
+      showFragment();
+      interval = setInterval(() => {
+        if (!paused) nextFragment();
+      }, 4000);
 
-nextBtn.addEventListener("click", showFragment);
-pauseBtn.addEventListener("click", () => {
-  paused = !paused;
-  pauseBtn.innerText = paused ? "Riprendi" : "Pausa";
-});
-restartBtn.addEventListener("click", setupAndPlay);
+      document.getElementById("info").innerText =
+        `Sessione casuale n°${Math.floor(Math.random() * 10000)} — Frasi totali: ${fragments.length}`;
+    }
 
-setupAndPlay();
-</script>
+    function pausePlay() {
+      paused = !paused;
+      document.querySelector('button:nth-child(2)').innerText = paused ? "Riprendi" : "Pausa";
+    }
+
+    function restart() {
+      clearInterval(interval);
+      setupAndPlay();
+    }
+
+    setupAndPlay();
+  </script>
 
 </body>
 </html>
