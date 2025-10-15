@@ -1,233 +1,671 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>La stanza che cambia nome — Romanzi Effimeri</title>
-<style>
-  :root{--bg:#0b0b0d;--text:#e9eef6;--muted:#9aa3ad;--accent:#cfe0ff}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#070708);font-family:Helvetica,Arial,sans-serif;color:var(--text)}
-  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px}
-  .card{width:880px;max-width:96%;background:rgba(255,255,255,0.02);border-radius:12px;padding:28px;box-shadow:0 12px 34px rgba(0,0,0,0.6);text-align:center}
-  .title{font-size:20px;color:var(--accent);margin:0 0 6px;font-weight:600}
-  .subtitle{font-size:13px;color:var(--muted);margin:0 0 18px}
-  #fragment{min-height:120px;font-size:20px;line-height:1.6;opacity:0;transform:translateY(6px);transition:opacity .6s, transform .6s}
-  .visible{opacity:1;transform:translateY(0)}
-  .controls{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:18px}
-  button{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:10px 14px;border-radius:8px;cursor:pointer}
-  button.primary{background:#fff;color:#070708;border:none}
-  .meta{color:var(--muted);font-size:13px;margin-top:12px}
-  .progress{height:6px;background:rgba(255,255,255,0.03);border-radius:6px;margin-top:14px;overflow:hidden}
-  .bar{height:100%;width:0%;background:linear-gradient(90deg,#7ea2ff,#a3d0ff)}
-  .manifesto{opacity:0;transition:opacity 3s ease;margin-top:26px;color:#9aa3ad;font-size:13px;line-height:1.5}
-  .manifesto.visible{opacity:1}
-  @media (max-width:520px){.card{padding:18px}.title{font-size:18px}#fragment{font-size:17px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La stanza che cambia nome</title>
+  <style>
+    body {
+      background-color: #0e0e0e;
+      color: #e0e0e0;
+      font-family: 'Helvetica', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 20px;
+      transition: background-color 0.5s ease;
+    }
+    body.cold { background-color: #0a0e14; }
+    body.warm { background-color: #140e0a; }
+    
+    #room-selector {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: 300px;
+    }
+    .room-btn {
+      padding: 6px 12px;
+      background: transparent;
+      color: #888;
+      border: 1px solid #444;
+      cursor: pointer;
+      font-size: 0.85em;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    .room-btn:hover {
+      color: #e0e0e0;
+      border-color: #e0e0e0;
+    }
+    .room-btn.active {
+      background: #e0e0e0;
+      color: #0e0e0e;
+      border-color: #e0e0e0;
+    }
+    
+    #fragment {
+      font-size: 1.5em;
+      max-width: 700px;
+      margin: 20px;
+      min-height: 4em;
+      transition: opacity 0.6s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    #fragment.glitch {
+      animation: glitch 0.3s;
+    }
+    #fragment.tremble {
+      animation: tremble 0.5s;
+    }
+    @keyframes glitch {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(2px, -2px); }
+      60% { transform: translate(-2px, -2px); }
+      80% { transform: translate(2px, 2px); }
+    }
+    @keyframes tremble {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-1px); }
+      20%, 40%, 60%, 80% { transform: translateX(1px); }
+    }
+    
+    #controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 18px;
+      background: transparent;
+      color: #e0e0e0;
+      border: 1px solid #e0e0e0;
+      cursor: pointer;
+      font-size: 1em;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: #e0e0e0;
+      color: #0e0e0e;
+    }
+    button.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    #info {
+      font-size: 0.9em;
+      color: #aaa;
+      margin-top: 20px;
+    }
+    #progress {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 10px;
+    }
+    
+    #export-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a1a;
+      border: 1px solid #e0e0e0;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 500px;
+      display: none;
+      z-index: 1000;
+    }
+    #export-panel.show {
+      display: block;
+    }
+    #export-text {
+      width: 100%;
+      height: 200px;
+      background: #0e0e0e;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      padding: 10px;
+      margin: 15px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      resize: vertical;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      z-index: 999;
+    }
+    .overlay.show {
+      display: block;
+    }
+    
+    .easter-egg {
+      color: #ff6b6b;
+      cursor: help;
+    }
+
+    @media (max-width: 768px) {
+      #room-selector {
+        position: relative;
+        top: 0;
+        left: 0;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      #fragment {
+        font-size: 1.2em;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card" role="main" aria-live="polite">
-      <div class="title">La stanza che cambia nome</div>
-      <div class="subtitle">Opera: Romanzi Effimeri — ogni lettura ricompone un mistero nuovo</div>
+  <div id="room-selector">
+    <button class="room-btn active" onclick="changeRoom('base')">Stanza Base</button>
+    <button class="room-btn" onclick="changeRoom('night')">Notturna</button>
+    <button class="room-btn" onclick="changeRoom('day')">Diurna</button>
+    <button class="room-btn" onclick="changeRoom('memory')">Ricordo</button>
+  </div>
 
-      <div id="fragment" aria-atomic="true">Preparazione…</div>
+  <div id="fragment">Caricamento della stanza...</div>
+  
+  <div id="controls">
+    <button onclick="prevFragment()">Indietro</button>
+    <button id="pauseBtn" onclick="pausePlay()">Pausa</button>
+    <button onclick="nextFragment()">Avanti</button>
+    <button onclick="restart()">Ricomincia</button>
+    <button onclick="toggleDrift()">Deriva</button>
+    <button onclick="showExport()">Salva Sequenza</button>
+  </div>
+  
+  <div id="progress"></div>
+  <div id="info"></div>
 
-      <div class="controls">
-        <button id="playPause">Pausa</button>
-        <button id="next">Avanti</button>
-        <button id="restart">Ricomincia</button>
-        <div style="flex:1"></div>
-        <div style="color:var(--muted); font-size:13px">Sessione casuale — ordine nuovo ad ogni caricamento</div>
-      </div>
-
-      <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
-      <div class="meta" id="meta">Frasi totali: 40 — riproduzione automatica ogni 3.5s</div>
-      <div class="manifesto" id="manifesto">
-        <p><em>Manifesto dei Romanzi Effimeri</em></p>
-        <p>Queste opere si riscrivono ad ogni lettura. Non cercano la memoria: cercano l'attimo.</p>
-      </div>
+  <div class="overlay" id="overlay" onclick="hideExport()"></div>
+  <div id="export-panel">
+    <h3 style="margin-top:0;">La tua versione effimera</h3>
+    <textarea id="export-text" readonly></textarea>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button onclick="copySequence()">Copia</button>
+      <button onclick="hideExport()">Chiudi</button>
     </div>
   </div>
 
-<script>
-// --- 40 FRAMMENTI (thriller onirico) ---
-const FRAGMENTS = [
-  { id:"f1", text: "Quando aprì gli occhi, la stanza non aveva finestre, ma ricordava di averne avute." },
-  { id:"f2", text: "Sul pavimento c’era una chiave che non apriva nulla, ma che qualcuno aveva già usato." },
-  { id:"f3", text: "Ogni volta che pronunciava il suo nome, l’eco gli rispondeva con un altro." },
-  { id:"f4", text: "Un orologio senza lancette ticchettava comunque, come se avesse nostalgia del tempo." },
-  { id:"f5", text: "La porta c’era, ma cambiava muro ogni volta che si voltava." },
-  { id:"f6", text: "Una voce dietro di lui ripeteva le sue frasi con un secondo di ritardo." },
-  { id:"f7", text: "Sul tavolo trovò una fotografia in cui il suo volto era leggermente sfocato." },
-  { id:"f8", text: "C’era scritto: “Questa è la prova che sei stato qui.”" },
-  { id:"f9", text: "Provò ad aprire la finestra che non esisteva e sentì un vento freddo entrare comunque." },
-  { id:"f10", text: "Ogni oggetto nella stanza sembrava ricordare qualcosa che lui aveva dimenticato." },
-  { id:"f11", text: "Sapeva di essere venuto per indagare, ma non ricordava su cosa." },
-  { id:"f12", text: "Nella tasca trovò un taccuino: le prime pagine erano scritte da lui, le ultime da qualcun altro." },
-  { id:"f13", text: "Ogni parola cancellata sul taccuino appariva sul muro, in ordine diverso." },
-  { id:"f14", text: "“Non fidarti della porta,” diceva una frase scritta in rosso, “ti riporta solo al punto di partenza.”" },
-  { id:"f15", text: "Sospettava che il delitto non fosse mai avvenuto, ma che tutti ricordassero comunque un colpevole." },
-  { id:"f16", text: "Sentiva odore di pioggia, ma non c’era nessuna finestra aperta." },
-  { id:"f17", text: "Il telefono squillò. Dall’altra parte, la sua stessa voce gli disse: “Hai già chiamato.”" },
-  { id:"f18", text: "Trovò una scarpa sporca di terra e capì di non aver mai camminato lì." },
-  { id:"f19", text: "C’era un bicchiere mezzo pieno d’acqua, ma il riflesso mostrava una stanza diversa." },
-  { id:"f20", text: "Scrisse sul muro una frase: “Il corpo non era mai stato trovato.”" },
-  { id:"f21", text: "Poi la frase sparì e il muro gli restituì una parola soltanto: “Ancora.”" },
-  { id:"f22", text: "Provò a spegnere la luce, ma la stanza diventò più chiara." },
-  { id:"f23", text: "Ogni volta che chiudeva gli occhi, ricordava un dettaglio nuovo del delitto." },
-  { id:"f24", text: "Non sapeva se era un investigatore o il sospettato." },
-  { id:"f25", text: "In un sogno dentro il sogno, vide il cadavere aprire gli occhi." },
-  { id:"f26", text: "Si risvegliò nello stesso punto, ma con il taccuino pieno di nuove frasi." },
-  { id:"f27", text: "Ogni frase iniziava con: “Io non volevo dimenticare.”" },
-  { id:"f28", text: "Dalla porta entrò qualcuno con il suo stesso viso." },
-  { id:"f29", text: "“Non sei tu,” disse l’altro, “sei l’ultima versione di me.”" },
-  { id:"f30", text: "L’altro sorrise e gli lasciò la chiave. “Prova ad aprire, ma ricordati di chiudere dietro di te.”" },
-  { id:"f31", text: "Quando girò la chiave, la stanza ruotò lentamente, come se si stesse ricordando." },
-  { id:"f32", text: "Ogni oggetto tornò al posto giusto, ma il tavolo era sparito." },
-  { id:"f33", text: "Il telefono squillò ancora: “Abbiamo trovato il corpo. Era tuo.”" },
-  { id:"f34", text: "Il muro si incrinò e dietro comparve la fotografia di una stanza identica." },
-  { id:"f35", text: "Guardando meglio, vide che nella foto c’era lui, mentre guardava la foto." },
-  { id:"f36", text: "Pensò che forse l’indagine era iniziata quando aveva aperto il libro." },
-  { id:"f37", text: "Il libro era questo." },
-  { id:"f38", text: "“Non rileggere,” diceva l’ultima pagina, “oppure cambierà tutto ancora.”" },
-  { id:"f39", text: "Sentì bussare. Da dentro." },
-  { id:"f40", text: "Poi la stanza smise di avere un nome." }
-];
+  <script>
+    const rooms = {
+      base: [
+        "La stanza è vuota, ma qualcuno ha appena respirato.",
+        "Ogni volta che apri la porta, qualcosa è diverso.",
+        "Sul tavolo c'è una chiave che non ricordi di avere lasciato.",
+        "Una voce sussurra il tuo nome, ma non sai da dove arriva.",
+        "La finestra riflette un volto che non è il tuo.",
+        "Nel corridoio senti passi, ma nessuno è lì.",
+        "Ogni accesso cambia la storia, ma la storia cambia anche te.",
+        "L'orologio segna un'ora che non esiste.",
+        "Le pareti ricordano conversazioni mai avvenute.",
+        "Sotto il letto c'è un'ombra che si muove da sola.",
+        "La porta si chiude prima che tu la tocchi.",
+        "Nell'armadio trovi vestiti che non hai mai indossato.",
+        "Lo specchio mostra una stanza diversa dalla tua.",
+        "Il telefono squilla, ma dall'altra parte c'è solo silenzio.",
+        "Una lettera sul pavimento porta il tuo nome scritto con calligrafia antica.",
+        "Il soffitto è più basso di come lo ricordavi.",
+        "Le fotografie cambiano espressione quando non le guardi.",
+        "C'è un profumo nell'aria che appartiene a un ricordo perduto.",
+        "La maniglia della porta è calda, come se qualcuno l'avesse appena toccata.",
+        "Nel cassetto trovi un oggetto che pensavi di aver smarrito anni fa.",
+        "Le tende si muovono ma non c'è vento.",
+        "Sul muro compare una scritta che svanisce quando cerchi di leggerla.",
+        "Senti una musica lontana che conosci ma non riesci a ricordare.",
+        "La luce tremola seguendo il ritmo del tuo respiro.",
+        "Nel corridoio c'è una porta che prima non esisteva.",
+        "Il pavimento scricchiola componendo una melodia.",
+        "Ogni stanza contiene un frammento di tempo dimenticato.",
+        "Lo specchio si appanna come se qualcuno avesse parlato davanti ad esso.",
+        "C'è polvere solo dove non hai camminato.",
+        "La serratura si apre prima che inserisci la chiave.",
+        "Nel silenzio percepisci un battito che non è il tuo cuore.",
+        "Le ombre non corrispondono agli oggetti che le proiettano.",
+        "Sul davanzale trovi semi di un fiore che non conosci.",
+        "La temperatura cambia da una stanza all'altra senza motivo.",
+        "Nel buio intravedi contorni di mobili che non ci sono.",
+        "Qualcuno ha lasciato un bicchiere ancora tiepido.",
+        "Le scale contano un gradino diverso ogni volta che sali.",
+        "C'è un eco che risponde prima che tu parli.",
+        "La stanza respira con te, espandendosi e contraendosi.",
+        "Quando esci, sai già che al ritorno tutto sarà cambiato di nuovo."
+      ],
+      night: [
+        "La luna proietta ombre che non dovrebbero esistere.",
+        "Nel silenzio della notte, qualcosa sussurra segreti antichi.",
+        "Le stelle fuori dalla finestra sono disposte in modo sbagliato.",
+        "Il buio ha una consistenza che puoi quasi toccare.",
+        "Sogni a occhi aperti ricordi che non sono tuoi.",
+        "La notte dura più di quanto dovrebbe.",
+        "Nell'oscurità distingui forme che svaniscono quando accendi la luce.",
+        "Il tuo respiro forma nebbia anche se fa caldo.",
+        "Le ore notturne si ripetono come in un loop infinito.",
+        "Dormi camminando attraverso stanze che non hai mai visto.",
+        "Qualcosa ti osserva dal soffitto mentre cerchi di dormire.",
+        "I rumori notturni compongono frasi in una lingua dimenticata.",
+        "La luna entra nella stanza più di quanto la finestra permetta.",
+        "Nel dormiveglia vedi persone sedute ai piedi del letto.",
+        "L'alba non arriva quando dovrebbe.",
+        "Le ombre danzano seguendo una musica che non senti.",
+        "Ogni notte la stanza si allarga di qualche centimetro.",
+        "Nel buio totale vedi meglio che alla luce.",
+        "Qualcuno canta una ninna nanna che conoscevi da bambino.",
+        "Il tempo scorre al contrario tra mezzanotte e l'alba.",
+        "Le stelle cadono dentro la stanza attraverso il soffitto.",
+        "I sogni lasciano tracce fisiche al risveglio.",
+        "La notte ha un sapore metallico.",
+        "Dormi con gli occhi aperti senza rendertene conto.",
+        "Qualcosa respira sotto il pavimento.",
+        "Le pareti emanano una luce blu appena percettibile.",
+        "Nel sonno cammini attraverso specchi.",
+        "La porta della camera si apre sempre verso l'interno, anche quando la chiudi.",
+        "Sogni di svegliarti, ma sei ancora addormentato.",
+        "All'alba trovi oggetti spostati che giuri di non aver toccato.",
+        "La notte sa chi sei e ti chiama per nome.",
+        "Nel buio senti il rumore di pagine che si sfogliano.",
+        "Qualcuno ha lasciato impronte sul soffitto.",
+        "I tuoi pensieri notturni diventano sussurri udibili.",
+        "La stanza di notte è più grande che di giorno.",
+        "Dormi mentre sei sveglio e sei sveglio mentre dormi.",
+        "Nella penombra vedi te stesso riflesso dove non ci sono specchi.",
+        "Il silenzio notturno ha un peso fisico.",
+        "Qualcosa scrive messaggi sulla condensa delle finestre.",
+        "Quando chiudi gli occhi, la stanza continua a muoversi."
+      ],
+      day: [
+        "La luce del mattino entra da finestre che non ricordi di avere.",
+        "Il caffè nella tazza è ancora caldo, ma non ricordi di averlo preparato.",
+        "Le chiavi sono sempre dove non le cerchi.",
+        "Il calendario segna un giorno che è già passato.",
+        "Qualcuno ha rifatto il letto mentre eri in bagno.",
+        "La posta arriva prima che il postino suoni.",
+        "Nell'armadio trovi vestiti puliti che ieri erano sporchi.",
+        "Il telefono squilla un attimo prima che decidi di usarlo.",
+        "La televisione si accende su un canale che non esiste.",
+        "Fuori dalla finestra vedi passanti che camminano all'indietro.",
+        "L'orologio segna sempre l'ora giusta, ma senti che è sbagliata.",
+        "Le tende sono aperte, ma sei sicuro di averle chiuse.",
+        "Qualcuno ha scritto una lista di cose da fare con la tua calligrafia.",
+        "Il frigorifero contiene cibo che non hai comprato.",
+        "La polvere si deposita solo sugli oggetti che non usi.",
+        "Il citofono parla prima che tu risponda.",
+        "Le piante crescono troppo velocemente.",
+        "Senti conversazioni attraverso pareti che danno all'esterno.",
+        "La porta d'ingresso si chiude con un suono diverso ogni volta.",
+        "I vicini salutano qualcuno alle tue spalle, ma sei solo.",
+        "Le fatture arrivano per servizi che non hai richiesto.",
+        "Il campanello suona, ma nessuno è alla porta.",
+        "Trovi appunti scritti da te che non ricordi di aver scritto.",
+        "La luce del giorno ha una tonalità che non esiste in natura.",
+        "Gli oggetti sono sempre leggermente spostati rispetto a dove li lasci.",
+        "Il rumore del traffico forma parole comprensibili.",
+        "Qualcuno ha cucinato ma la cucina è immacolata.",
+        "Le scarpe alla porta sono disposte in ordine diverso ogni giorno.",
+        "Ricevi chiamate da numeri che stanno per chiamarti.",
+        "Lo specchio del bagno riflette una versione più giovane di te.",
+        "Le bollette mostrano consumi di momenti che devono ancora accadere.",
+        "Trovi biglietti nei libri che stavi per leggere.",
+        "L'acqua scorre prima che apri il rubinetto.",
+        "Le email arrivano in risposta a messaggi che non hai ancora inviato.",
+        "Senti passi al piano di sopra, ma vivi all'ultimo piano.",
+        "Il termostato cambia temperatura seguendo i tuoi pensieri.",
+        "Qualcuno ha spolverato mentre eri distratto.",
+        "La radio trasmette conversazioni private.",
+        "Gli orologi della casa mostrano tutti orari diversi, ma tutti giusti.",
+        "La giornata finisce prima che tu sia pronto."
+      ],
+      memory: [
+        "Ricordi un luogo che non hai mai visitato.",
+        "Qualcuno nella tua memoria ha un volto che cambia.",
+        "C'è una canzone dell'infanzia che nessun altro conosce.",
+        "Ricordi conversazioni che non sono mai avvenute.",
+        "Nella tua mente c'è una stanza della casa dove sei cresciuto che non è mai esistita.",
+        "Un profumo ti riporta a un momento che appartiene a qualcun altro.",
+        "Ricordi di aver detto addio a persone che sono ancora qui.",
+        "C'è un ricordo che cambia ogni volta che lo rivisiti.",
+        "Nella memoria, alcune persone hanno nomi diversi.",
+        "Ricordi eventi che devono ancora accadere.",
+        "Un oggetto dell'infanzia esiste solo nei tuoi pensieri.",
+        "Ricordi te stesso da punti di vista impossibili.",
+        "C'è un sapore che appartiene a un piatto mai cucinato.",
+        "Nella tua memoria alcune stagioni sono nell'ordine sbagliato.",
+        "Ricordi di aver vissuto in città dove non sei mai stato.",
+        "Un amico d'infanzia esiste solo nei tuoi ricordi, nessun altro lo conosce.",
+        "Ricordi parole pronunciate da persone che non hai mai incontrato.",
+        "C'è un ricordo che proviene da prima della tua nascita.",
+        "Nella memoria, alcune porte portano a luoghi impossibili.",
+        "Ricordi di aver imparato cose che nessuno ti ha insegnato.",
+        "Un volto familiare nella tua mente non corrisponde a nessuna fotografia.",
+        "Ricordi sensazioni fisiche di esperienze mai vissute.",
+        "C'è una lingua nei tuoi ricordi che non hai mai studiato.",
+        "Ricordi il futuro come se fosse già passato.",
+        "Nella memoria, alcune persone sono presenti in epoche sbagliate.",
+        "Ricordi di aver visto te stesso dall'esterno.",
+        "C'è un suono che appartiene a un ricordo inventato.",
+        "Ricordi emozioni troppo intense per essere reali.",
+        "Nella tua mente esistono stanze che sfidano la geometria.",
+        "Ricordi di aver letto libri mai scritti.",
+        "Un ricordo felice contiene dettagli impossibili.",
+        "Ricordi di aver camminato in sogni altrui.",
+        "C'è una festa nella tua memoria a cui nessuno è mai stato invitato.",
+        "Ricordi te stesso con età diverse nello stesso momento.",
+        "Nella memoria, alcuni oggetti hanno proprietà magiche.",
+        "Ricordi di aver parlato con te stesso bambino.",
+        "C'è un viaggio nei tuoi ricordi che non hai mai fatto.",
+        "Ricordi il tocco di mani fantasma.",
+        "Nella tua mente alcune storie hanno finali multipli simultanei.",
+        "Ricordi di essere stato qualcun altro, in un'altra vita che non esiste."
+      ]
+    };
 
-// piccoli ending
-const ENDINGS = [
-  "Alla fine rimase solo un biglietto con una domanda: chi ha scritto la stanza?",
-  "La stanza si richiuse e il suo nome tornò a essere un silenzio.",
-  "Qualcuno spense la luce e sentì la vecchia promessa di non ricordare più.",
-  "Quando cercò la risposta, si accorse che la verità era soltanto una ricostruzione.",
-  "Il libro chiuse le pagine e la stanza cominciò a respirare come se fosse viva.",
-  "Guardò la fotografia un’ultima volta e capì che anche il ricordo può mentire."
-];
+    let currentRoom = 'base';
+    let fragments = [];
+    let sequence = [];
+    let current = 0;
+    let interval = null;
+    let paused = false;
+    let driftMode = false;
+    let sessionId = Math.floor(Math.random() * 10000);
+    let readFragments = new Set();
+    let startTime = new Date();
 
-// utilità: mescola Fisher-Yates
-function shuffle(a){
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+    function shuffle(array) {
+      let a = [...array];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
 
-// UI
-const fragmentEl = document.getElementById('fragment');
-const playPauseBtn = document.getElementById('playPause');
-const nextBtn = document.getElementById('next');
-const restartBtn = document.getElementById('restart');
-const barEl = document.getElementById('bar');
-const metaEl = document.getElementById('meta');
+    function getFragmentDuration(text) {
+      const baseTime = 4000;
+      const wordsCount = text.split(' ').length;
+      if (wordsCount < 8) return baseTime * 0.8;
+      if (wordsCount > 15) return baseTime * 1.3;
+      return baseTime;
+    }
 
-let playlist = [];
-let current = 0;
-let playing = true;
-let intervalMs = 3500;
-let timer = null;
+    function applyVisualEffects(text) {
+      const el = document.getElementById("fragment");
+      const body = document.body;
+      
+      el.classList.remove('glitch', 'tremble');
+      body.classList.remove('cold', 'warm');
+      
+      const glitchWords = ['specchio', 'riflette', 'distorto', 'glitch', 'svanisce'];
+      const trembleWords = ['tremare', 'instabile', 'scricchiola', 'vibra', 'tremola'];
+      const coldWords = ['freddo', 'ghiaccio', 'neve', 'gelo', 'luna', 'notte', 'buio'];
+      const warmWords = ['caldo', 'tiepido', 'sole', 'fuoco', 'estate', 'luce'];
+      
+      const lowerText = text.toLowerCase();
+      
+      if (glitchWords.some(word => lowerText.includes(word))) {
+        setTimeout(() => el.classList.add('glitch'), 100);
+      }
+      
+      if (trembleWords.some(word => lowerText.includes(word))) {
+        el.classList.add('tremble');
+      }
+      
+      if (coldWords.some(word => lowerText.includes(word))) {
+        body.classList.add('cold');
+      } else if (warmWords.some(word => lowerText.includes(word))) {
+        body.classList.add('warm');
+      }
+    }
 
-function setupAndPlay(){
-  // copia e mescola i frammenti
-  playlist = shuffle(FRAGMENTS.slice());
-  current = 0;
-  metaEl.textContent = `Frasi totali: ${playlist.length} — riproduzione automatica ogni ${intervalMs/1000}s`;
-  showStep(current);
-  startTimer();
-  updateBar();
-}
+    function highlightEasterEggs(text) {
+      const easterEggWords = ['respira', 'nome', 'specchio', 'eco', 'ombra'];
+      let result = text;
+      
+      easterEggWords.forEach(word => {
+        const regex = new RegExp(`\\b(${word}\\w*)\\b`, 'gi');
+        result = result.replace(regex, '<span class="easter-egg" onclick="triggerEasterEgg(\'$1\')">$1</span>');
+      });
+      
+      return result;
+    }
 
-function showStep(i){
-  if(!playlist || playlist.length===0){
-    fragmentEl.textContent = "Nessun frammento disponibile.";
-    fragmentEl.classList.add('visible');
-    return;
-  }
-  fragmentEl.classList.remove('visible');
-  setTimeout(()=>{
-    fragmentEl.textContent = playlist[i].text;
-    fragmentEl.classList.add('visible');
-    updateBar();
-  }, 120);
-}
+    function triggerEasterEgg(word) {
+      const secrets = [
+        "Hai trovato una crepa nella realtà.",
+        "Questa parola ti osserva da sempre.",
+        "Ora la stanza sa che sai.",
+        "Alcune parole sono porte.",
+        "Hai toccato qualcosa che non dovevi."
+      ];
+      
+      const secret = secrets[Math.floor(Math.random() * secrets.length)];
+      const el = document.getElementById("fragment");
+      const oldText = el.innerHTML;
+      
+      el.style.opacity = 0;
+      setTimeout(() => {
+        el.innerHTML = `<span style="color:#ff6b6b">${secret}</span>`;
+        el.style.opacity = 1;
+        setTimeout(() => {
+          el.innerHTML = oldText;
+        }, 2000);
+      }, 300);
+    }
 
-function nextStep(){
-  if(!playlist || playlist.length===0) return;
-  current++;
-  if(current >= playlist.length){
-    showEnding();
-    stopTimer();
-    return;
-  }
-  showStep(current);
-}
+    function showFragment() {
+      const el = document.getElementById("fragment");
+      const text = fragments[current];
+      
+      el.style.opacity = 0;
+      setTimeout(() => {
+        el.innerHTML = highlightEasterEggs(text);
+        el.style.opacity = 1;
+        applyVisualEffects(text);
+        readFragments.add(current);
+        updateProgress();
+      }, 300);
+      
+      if (!paused && !driftMode) {
+        clearInterval(interval);
+        const duration = getFragmentDuration(text);
+        interval = setInterval(() => {
+          if (!paused) nextFragment();
+        }, duration);
+      }
+    }
 
-function prevStep(){
-  if(!playlist || playlist.length===0) return;
-  current = (current-1+playlist.length)%playlist.length;
-  showStep(current);
-}
+    function updateProgress() {
+      const total = fragments.length;
+      const read = readFragments.size;
+      const progress = document.getElementById("progress");
+      progress.textContent = `Frasi lette: ${read}/${total}`;
+      
+      if (read === total) {
+        progress.innerHTML += ' <span style="color:#4ade80">✓ Ciclo completato</span>';
+      }
+    }
 
-function showEnding(){
-  fragmentEl.classList.remove('visible');
-  setTimeout(()=>{
-    const lastId = playlist[playlist.length-1].id || "";
-    let num = 0;
-    const m = lastId.match(/\d+/);
-    if(m) num = parseInt(m[0],10);
-    const endingIndex = num % ENDINGS.length;
-    fragmentEl.textContent = ENDINGS[endingIndex];
-    fragmentEl.classList.add('visible');
-    metaEl.textContent = `Fine. Sequenza terminata (${playlist.length} frammenti).`;
-    barEl.style.width = `100%`;
-    // mostra manifesto dopo 3.5s
-    setTimeout(()=> document.getElementById('manifesto').classList.add('visible'), 3500);
-  }, 120);
-}
+    function nextFragment() {
+      current = (current + 1) % fragments.length;
+      showFragment();
+    }
 
-function startTimer(){
-  stopTimer();
-  if(!playing) return;
-  timer = setInterval(()=> nextStep(), intervalMs);
-  playPauseBtn.textContent = 'Pausa';
-}
+    function prevFragment() {
+      current = (current - 1 + fragments.length) % fragments.length;
+      showFragment();
+    }
 
-function stopTimer(){
-  if(timer){ clearInterval(timer); timer = null; }
-  playPauseBtn.textContent = 'Riprendi';
-}
+    function changeRoom(room) {
+      if (room === currentRoom) return;
+      
+      currentRoom = room;
+      document.querySelectorAll('.room-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      clearInterval(interval);
+      readFragments.clear();
+      setupAndPlay();
+    }
 
-function togglePlay(){
-  playing = !playing;
-  if(playing) startTimer(); else stopTimer();
-}
+    function setupAndPlay() {
+      fragments = shuffle(rooms[currentRoom]);
+      sequence = [...fragments];
+      current = 0;
+      readFragments.clear();
+      sessionId = Math.floor(Math.random() * 10000);
+      startTime = new Date();
+      
+      showFragment();
+      
+      if (!driftMode) {
+        const duration = getFragmentDuration(fragments[0]);
+        interval = setInterval(() => {
+          if (!paused) nextFragment();
+        }, duration);
+      }
+      
+      const roomNames = {
+        base: 'Base',
+        night: 'Notturna',
+        day: 'Diurna',
+        memory: 'Ricordo'
+      };
+      
+      document.getElementById("info").innerText =
+        `Sessione casuale n°${sessionId} — Stanza: ${roomNames[currentRoom]} — Frasi totali: ${fragments.length}`;
+      
+      updateProgress();
+    }
 
-function updateBar(){
-  if(!playlist || playlist.length===0){ barEl.style.width='0%'; return; }
-  const pct = Math.round((current / playlist.length) * 100);
-  barEl.style.width = `${pct}%`;
-}
+    function pausePlay() {
+      paused = !paused;
+      document.getElementById('pauseBtn').innerText = paused ? "Riprendi" : "Pausa";
+    }
 
-// eventi UI
-playPauseBtn.addEventListener('click', ()=> togglePlay());
-nextBtn.addEventListener('click', ()=>{
-  if(current >= playlist.length){ setupAndPlay(); return; }
-  if(playing){ stopTimer(); playing = false; }
-  nextStep();
-});
-restartBtn.addEventListener('click', ()=> { setupAndPlay(); });
+    function restart() {
+      clearInterval(interval);
+      if (driftMode) {
+        driftMode = false;
+        document.getElementById('controls').querySelectorAll('button').forEach(btn => {
+          btn.classList.remove('hidden');
+        });
+      }
+      setupAndPlay();
+    }
 
-// tastiera: spazio = avanti, freccia sin/dx per indietro/avanti
-document.addEventListener('keydown', (e)=>{
-  if(e.code==='Space'){ e.preventDefault(); nextBtn.click(); }
-  if(e.code==='ArrowLeft'){ prevStep(); }
-  if(e.code==='ArrowRight'){ nextBtn.click(); }
-});
+    function toggleDrift() {
+      driftMode = !driftMode;
+      const controls = document.getElementById('controls');
+      
+      if (driftMode) {
+        paused = false;
+        controls.querySelectorAll('button').forEach(btn => {
+          if (btn.textContent !== 'Deriva') {
+            btn.classList.add('hidden');
+          } else {
+            btn.textContent = 'Esci dalla Deriva';
+          }
+        });
+        clearInterval(interval);
+        interval = setInterval(() => nextFragment(), 5000);
+      } else {
+        controls.querySelectorAll('button').forEach(btn => btn.classList.remove('hidden'));
+        event.target.textContent = 'Deriva';
+        clearInterval(interval);
+        const duration = getFragmentDuration(fragments[current]);
+        interval = setInterval(() => {
+          if (!paused) nextFragment();
+        }, duration);
+      }
+    }
 
-// init
-document.addEventListener('DOMContentLoaded', ()=> {
-  setTimeout(()=> setupAndPlay(), 120);
-});
-</script>
+    function showExport() {
+      const roomNames = {
+        base: 'Base',
+        night: 'Notturna',
+        day: 'Diurna',
+        memory: 'Ricordo'
+      };
+      
+      const endTime = new Date();
+      const duration = Math.floor((endTime - startTime) / 1000);
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      
+      let exportText = `═══════════════════════════════════════
+LA STANZA CHE CAMBIA NOME
+Romanzo Effimero - Versione Unica
+═══════════════════════════════════════
+
+Sessione: #${sessionId}
+Stanza: ${roomNames[currentRoom]}
+Data: ${endTime.toLocaleDateString('it-IT')}
+Ora: ${endTime.toLocaleTimeString('it-IT')}
+Durata lettura: ${minutes}m ${seconds}s
+Frasi lette: ${readFragments.size}/${fragments.length}
+
+═══════════════════════════════════════
+SEQUENZA
+═══════════════════════════════════════
+
+`;
+      
+      sequence.forEach((frag, index) => {
+        exportText += `${index + 1}. ${frag}\n\n`;
+      });
+      
+      exportText += `═══════════════════════════════════════
+
+Questa sequenza è irripetibile.
+La stanza ha già cambiato forma.
+
+═══════════════════════════════════════`;
+      
+      document.getElementById('export-text').value = exportText;
+      document.getElementById('export-panel').classList.add('show');
+      document.getElementById('overlay').classList.add('show');
+    }
+
+    function hideExport() {
+      document.getElementById('export-panel').classList.remove('show');
+      document.getElementById('overlay').classList.remove('show');
+    }
+
+    function copySequence() {
+      const textarea = document.getElementById('export-text');
+      textarea.select();
+      document.execCommand('copy');
+      
+      const btn = event.target;
+      const oldText = btn.textContent;
+      btn.textContent = 'Copiato!';
+      setTimeout(() => {
+        btn.textContent = oldText;
+      }, 2000);
+    }
+
+    setupAndPlay();
+  </script>
 </body>
 </html>
