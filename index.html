@@ -243,6 +243,33 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // small delay to allow CSS render
   setTimeout(()=> setupAndPlay(), 120);
 });
+  <script>
+const fragments = [
+  "La stanza è vuota, ma qualcuno ha appena respirato.",
+  "Ogni volta che apri la porta, qualcosa è diverso.",
+  "Sul tavolo c’è una chiave che non ricordi di avere lasciato.",
+  "Una voce sussurra il tuo nome, ma non sai da dove arriva.",
+  "La finestra riflette un volto che non è il tuo.",
+  "Nel corridoio senti passi, ma nessuno è lì.",
+  "Ogni accesso cambia la storia, ma la storia cambia anche te."
+];
+
+let current = 0;
+let interval;
+
+function showFragment() {
+  const el = document.getElementById("fragment");
+  el.innerText = fragments[current];
+  current = (current + 1) % fragments.length;
+}
+
+function setupAndPlay() {
+  clearInterval(interval);
+  showFragment();
+  interval = setInterval(showFragment, 4000);
+}
+
+setupAndPlay();
 </script>
 </body>
 </html>
